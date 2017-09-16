@@ -14,10 +14,7 @@ namespace BluetoothScouterPits
 {
     public partial class MainForm : Form
     {
-        private string username;
-        private string password;
-        private List<string> averageHeaders;
-        private List<string> sumHeaders;
+        private readonly Settings settings = new Settings();
 
         public MainForm()
         {
@@ -25,43 +22,6 @@ namespace BluetoothScouterPits
 
             SetWatermark(searchBox, "Search By Team");
             // TestLoad();
-
-            LoadConfig();
-        }
-
-        private const string ConfigurationFile = "config.cfg";
-        private void LoadConfig()
-        {
-            try
-            {
-                using (var reader = new StreamReader(ConfigurationFile))
-                {
-                    username = reader.ReadLine(); // Firebase username
-                    password = reader.ReadLine(); // Firebase password
-
-                    // Headers to create average column
-                    var averages = reader.ReadLine();
-                    if (averages != null && averages.Split(',').ToList().Any())
-                        averageHeaders = averages.Split(',').ToList();
-
-                    // Headers to create sum column
-                    var sums = reader.ReadLine();
-                    if (sums != null && sums.Split(',').ToList().Any())
-                        sumHeaders = sums.Split(',').ToList();
-                }
-            }
-            catch (IOException e)
-            {
-                // Empty or corrupted, clear out the data
-                using (var writer = new StreamWriter(ConfigurationFile))
-                {
-                    writer.WriteLine(""); // Username
-                    writer.WriteLine(""); // Password
-                    writer.WriteLine(""); // Headers to average (csv)
-                    writer.WriteLine(""); // Headers to sum (csv)
-                    writer.FlushAsync();
-                }
-            }
         }
 
         /*
@@ -82,7 +42,7 @@ namespace BluetoothScouterPits
 
         private void OnSettingsMenu(object sender, EventArgs e)
         {
-
+            settings.Show();
         }
 
         private void OnExitMenu(object sender, EventArgs e)
