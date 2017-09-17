@@ -1,84 +1,110 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
-
-using Firebase;
 using Firebase.Auth;
 using Firebase.Database;
 using Newtonsoft.Json.Linq;
 
 namespace BluetoothScouterPits
 {
-    class DataSource
+    internal class DataSource
     {
-        private const string ApiKey = "AIzaSyB8lwXAKsGt4mKZB-3aFyPbxEXDDA6HSTE";
-        private readonly FirebaseAuthProvider firebaseAuthProvider = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
+        private const string JsonMatchNumberTag = "Match Number";
+        private const string JsonTeamNumberTag = "Team Number";
+
+        private readonly Settings settings;
+
         private FirebaseClient database;
 
-        private const string jsonMatchNumberTag = "matchNumber";
+        public DataSource(Settings firebaseSettings)
+        {
+            settings = firebaseSettings;
 
-        private string username = "";
-        private string password = "";
-        public void SetUsername(string user)
-        {
-            username = user;
-        }
-        public void SetPassword(string pass)
-        {
-            password = pass;
+            RefreshCredentials();
         }
 
-        private string databaseName = "";
-        public void SetDatabase(string data)
-        {
-            databaseName = data;
-        }
 
-        public async Task<List<JObject>> Get()
+        public async Task<List<MatchObject>> Get()
         {
-            return await Get(databaseName);
-        }
-
-        public async Task<List<JObject>> Get(string databaseName)
-        {
-            var result = (await database.Child("Values").OnceAsync<JObject>());
-            List<JObject> results = new List<JObject>();
-            foreach (var r in result)
+            try
             {
-                results.Add(r.Object);
+                return await Get(settings.EventName);
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        public async Task<List<MatchObject>> Get(string name)
+        {
+            var result = await database.Child(name).OnceAsync<JObject>();
+            var results = new List<MatchObject>();
+            foreach (var r in result)
+                results.Add(new MatchObject(r.Object));
             return results;
         }
 
-        public DataSource(string user, string pass)
-        {
-            username = user;
-            password = pass;
-
-            SetupDatabase();
-        }
-
-        private async void SetupDatabase()
+        public void RefreshCredentials()
         {
             // Initialize connection with Firebase
-            database = new FirebaseClient("https://hot-67-scouting.firebaseio.com",
+            database = new FirebaseClient(settings.DatabaseUrl,
                 new FirebaseOptions
                 {
                     AuthTokenAsyncFactory = () => LoginASync()
                 });
         }
 
-        public async Task<String> LoginASync()
+        // The authentication method
+        public async Task<string> LoginASync()
         {
             var authProvider = new FirebaseAuthProvider(
-                new FirebaseConfig("AIzaSyB8lwXAKsGt4mKZB-3aFyPbxEXDDA6HSTE"));
-            var auth = await authProvider.SignInWithEmailAndPasswordAsync(username, password);
+                new FirebaseConfig(settings.ApiKey));
+            var auth = await authProvider
+                .SignInWithEmailAndPasswordAsync(
+                    settings.Username, settings.Password);
+
             return auth.FirebaseToken;
+        }
+
+        // A match object with publicly accessible matchnumber and teamnumber, 
+        // in addition to existing tags. This way json ops are not exposed outside of this class
+        public class MatchObject
+        {
+            private readonly JObject values;
+
+            public MatchObject(JObject json)
+            {
+                values = json;
+                MatchNumber = json[JsonMatchNumberTag].Value<string>();
+                TeamNumber = json[JsonTeamNumberTag].Value<string>();
+                json.Remove(JsonMatchNumberTag);
+                json.Remove(JsonTeamNumberTag);
+            }
+
+            public string MatchNumber { get; }
+            public string TeamNumber { get; }
+
+            // GetValue a specific value based on key
+            public string GetValue(string key)
+            {
+                return values[key].Value<string>();
+            }
+
+            // GetValue all values
+            public List<string> GetAllValues()
+            {
+                return values.PropertyValues()
+                    .Select(r => r.Value<string>()).ToList();
+            }
+
+            // GetValue all keys
+            public List<string> GetAllKeys()
+            {
+                return values.Properties().Select(p => p.Name).ToList();
+            }
         }
     }
 }
