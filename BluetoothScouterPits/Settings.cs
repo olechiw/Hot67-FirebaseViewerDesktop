@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
@@ -197,7 +196,9 @@ namespace BluetoothScouterPits
             {
                 // Write to the file in the order of which they properties occur. 
                 // Using reflection for easier expandability, i really don't know why
+
                 #region old
+
                 /*
                 foreach (var property in settingsValuesInstance.GetType().GetProperties())
                 {
@@ -227,6 +228,7 @@ namespace BluetoothScouterPits
                     }
                 }
                 */
+
                 #endregion
 
                 writer.WriteLine(settingsValuesInstance.Username);
