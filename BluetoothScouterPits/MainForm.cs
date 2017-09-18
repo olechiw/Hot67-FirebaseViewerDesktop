@@ -375,7 +375,7 @@ namespace BluetoothScouterPits
             SendMessage(box.Handle, 0x1501, 1, message);
         }
 
-        private void onMasterViewSelect(object sender, EventArgs e)
+        private void OnMasterViewSelectionChanged(object sender, EventArgs e)
         {
             var row = ((DataGridView) sender).CurrentRow;
             row.Selected = false;
