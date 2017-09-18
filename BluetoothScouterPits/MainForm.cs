@@ -73,6 +73,11 @@ namespace BluetoothScouterPits
             RePopulate();
         }
 
+        private void OnResetMenu(object sender, EventArgs e)
+        {
+            RePopulate();
+        }
+
         private void OnExitMenu(object sender, EventArgs e)
         {
             Close();

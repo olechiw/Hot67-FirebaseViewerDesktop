@@ -34,6 +34,7 @@
             this.syncToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resetMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.pinnedDataGridView = new System.Windows.Forms.DataGridView();
@@ -42,6 +43,8 @@
             this.searchResults = new System.Windows.Forms.GroupBox();
             this.searchDataGridView = new System.Windows.Forms.DataGridView();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this.helpLabel = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -51,18 +54,19 @@
             this.searchResults.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.searchDataGridView)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
+            this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // searchBox
             // 
-            this.searchBox.Dock = System.Windows.Forms.DockStyle.Top;
+            this.searchBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.searchBox.HidePromptOnLeave = true;
             this.searchBox.InsertKeyMode = System.Windows.Forms.InsertKeyMode.Insert;
-            this.searchBox.Location = new System.Drawing.Point(0, 24);
+            this.searchBox.Location = new System.Drawing.Point(3, 3);
             this.searchBox.Mask = "00000000";
             this.searchBox.Name = "searchBox";
             this.searchBox.PromptChar = ' ';
-            this.searchBox.Size = new System.Drawing.Size(1089, 20);
+            this.searchBox.Size = new System.Drawing.Size(198, 20);
             this.searchBox.TabIndex = 1;
             this.searchBox.TabStop = false;
             this.searchBox.ValidatingType = typeof(int);
@@ -83,6 +87,7 @@
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.syncToolStripMenuItem,
             this.settingsToolStripMenuItem,
+            this.resetMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -113,6 +118,14 @@
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.OnExitMenu);
             // 
+            // resetMenuItem
+            // 
+            this.resetMenuItem.Name = "resetMenuItem";
+            this.resetMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
+            this.resetMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.resetMenuItem.Text = "Reset";
+            this.resetMenuItem.Click += new System.EventHandler(this.OnResetMenu);
+            // 
             // tableLayoutPanel2
             // 
             this.tableLayoutPanel2.ColumnCount = 1;
@@ -125,7 +138,7 @@
             this.tableLayoutPanel2.RowCount = 2;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(539, 507);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(539, 527);
             this.tableLayoutPanel2.TabIndex = 1;
             // 
             // groupBox1
@@ -135,7 +148,7 @@
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(533, 247);
+            this.groupBox1.Size = new System.Drawing.Size(533, 257);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Pinned Teams";
@@ -152,7 +165,7 @@
             this.pinnedDataGridView.Name = "pinnedDataGridView";
             this.pinnedDataGridView.ReadOnly = true;
             this.pinnedDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.pinnedDataGridView.Size = new System.Drawing.Size(527, 222);
+            this.pinnedDataGridView.Size = new System.Drawing.Size(527, 232);
             this.pinnedDataGridView.TabIndex = 0;
             this.pinnedDataGridView.SelectionChanged += new System.EventHandler(this.OnPinnedViewSelectionChanged);
             this.pinnedDataGridView.Click += new System.EventHandler(this.onMasterViewSelect);
@@ -163,9 +176,9 @@
             this.groupBox2.Controls.Add(this.matchesDataGridView);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox2.Location = new System.Drawing.Point(3, 256);
+            this.groupBox2.Location = new System.Drawing.Point(3, 266);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(533, 248);
+            this.groupBox2.Size = new System.Drawing.Size(533, 258);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Matches";
@@ -182,7 +195,7 @@
             this.matchesDataGridView.Name = "matchesDataGridView";
             this.matchesDataGridView.ReadOnly = true;
             this.matchesDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.matchesDataGridView.Size = new System.Drawing.Size(527, 223);
+            this.matchesDataGridView.Size = new System.Drawing.Size(527, 233);
             this.matchesDataGridView.TabIndex = 0;
             // 
             // searchResults
@@ -192,7 +205,7 @@
             this.searchResults.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.searchResults.Location = new System.Drawing.Point(3, 3);
             this.searchResults.Name = "searchResults";
-            this.searchResults.Size = new System.Drawing.Size(538, 507);
+            this.searchResults.Size = new System.Drawing.Size(538, 527);
             this.searchResults.TabIndex = 0;
             this.searchResults.TabStop = false;
             this.searchResults.Text = "Search Results";
@@ -209,7 +222,7 @@
             this.searchDataGridView.Name = "searchDataGridView";
             this.searchDataGridView.ReadOnly = true;
             this.searchDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.searchDataGridView.Size = new System.Drawing.Size(532, 482);
+            this.searchDataGridView.Size = new System.Drawing.Size(532, 502);
             this.searchDataGridView.TabIndex = 0;
             this.searchDataGridView.SelectionChanged += new System.EventHandler(this.OnSearchViewSelectionChanged);
             this.searchDataGridView.Click += new System.EventHandler(this.onMasterViewSelect);
@@ -223,21 +236,49 @@
             this.tableLayoutPanel1.Controls.Add(this.searchResults, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 44);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1089, 513);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1089, 533);
             this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // tableLayoutPanel3
+            // 
+            this.tableLayoutPanel3.ColumnCount = 2;
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 18.8114F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 81.18861F));
+            this.tableLayoutPanel3.Controls.Add(this.searchBox, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.helpLabel, 1, 0);
+            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanel3.Location = new System.Drawing.Point(0, 24);
+            this.tableLayoutPanel3.MaximumSize = new System.Drawing.Size(0, 25);
+            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
+            this.tableLayoutPanel3.RowCount = 1;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(1089, 25);
+            this.tableLayoutPanel3.TabIndex = 4;
+            // 
+            // helpLabel
+            // 
+            this.helpLabel.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.helpLabel.AutoSize = true;
+            this.helpLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.helpLabel.Location = new System.Drawing.Point(332, 2);
+            this.helpLabel.Name = "helpLabel";
+            this.helpLabel.Size = new System.Drawing.Size(629, 20);
+            this.helpLabel.TabIndex = 2;
+            this.helpLabel.Text = "Double click to pin/unpin,  Ctrl+S to sync, Ctrl+Shift+S to access Settings, Ctrl" +
+    "+E to reset";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1089, 557);
+            this.Controls.Add(this.tableLayoutPanel3);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Controls.Add(this.searchBox);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
@@ -253,6 +294,8 @@
             this.searchResults.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.searchDataGridView)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel3.ResumeLayout(false);
+            this.tableLayoutPanel3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -273,6 +316,9 @@
         private System.Windows.Forms.GroupBox searchResults;
         private System.Windows.Forms.DataGridView searchDataGridView;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
+        private System.Windows.Forms.Label helpLabel;
+        private System.Windows.Forms.ToolStripMenuItem resetMenuItem;
     }
 }
 
