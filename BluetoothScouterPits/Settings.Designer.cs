@@ -1,4 +1,6 @@
-﻿namespace BluetoothScouterPits
+﻿using System.IO;
+
+namespace BluetoothScouterPits
 {
     partial class Settings
     {
@@ -18,7 +20,7 @@
                 if (components != null)
                     components.Dispose();
 
-                WriteSettingsToFile();
+                WriteSettings(new StreamWriter(ConfigurationFile));
             }
             base.Dispose(disposing);
         }

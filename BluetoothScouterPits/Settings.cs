@@ -1,158 +1,159 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace BluetoothScouterPits
 {
     public partial class Settings : Form
     {
-        private const string ConfigurationFile = "config.cfg";
+        protected const string ConfigurationFile = "config.cfg";
 
         public const string ColumnsColumnName = "Column";
         // Name of datatable column for the calculated columns
 
         // A private class with public members of the values, to use for databinding
-        private readonly SettingsValues settingsValuesInstance = new SettingsValues();
+        protected readonly SettingsValues SettingsValuesInstance = new SettingsValues();
 
 
-        public Settings()
+        public Settings(bool testing = false)
         {
             InitializeComponent();
-            LoadConfig();
+            if (testing) return;
+
+            SetSettingsProperties(File.Exists(ConfigurationFile)
+                ? ReadSettings(new StreamReader(ConfigurationFile))
+                : null);
+
             BindValues();
             FetchMatches();
         }
 
         // Load the settings from the configuration file
-        private void LoadConfig()
+        public List<string> ReadSettings(TextReader reader)
         {
-            if (File.Exists(ConfigurationFile))
+            if (!File.Exists(ConfigurationFile)) return null;
+
+            var config = new List<string>();
+            var line = reader.ReadLine();
+            while (line != null)
             {
-                using (var reader = new StreamReader(ConfigurationFile))
+                config.Add(line);
+                line = reader.ReadLine();
+            }
+
+            reader.Close();
+
+            return config;
+        }
+
+        public static bool IsString(PropertyInfo p) =>
+            p.PropertyType.Name == "String";
+
+        public static bool IsDataTable(PropertyInfo p) =>
+            p.PropertyType.Name == "DataTable";
+
+        public void SetSettingsProperties(IReadOnlyList<string> values)
+        {
+            if (values != null)
+            {
+                var settingsProperties = SettingsValuesInstance.GetType().GetProperties();
+
+                var i = 0;
+                for (; i < values.Count; ++i)
                 {
-                    var line = reader.ReadLine();
-                    settingsValuesInstance.Username =
-                        line ?? ""; // Firebase Username
+                    if (IsDataTable(settingsProperties[i]))
+                    {
+                        var table = new DataTable();
+                        table.Columns.Add(ColumnsColumnName);
+                        foreach (var v in values[i].Split(','))
+                            table.Rows.Add(v);
+                        settingsProperties[i].SetValue(SettingsValuesInstance, table);
+                    }
+                    else if (IsString(settingsProperties[i]))
+                        settingsProperties[i].SetValue(SettingsValuesInstance, values[i]);
+                }
+                // Account for extra values not stored, only continue if some leftover
+                if (i + 1 >= settingsProperties.Length) return;
 
-                    line = reader.ReadLine();
-                    settingsValuesInstance.Password =
-                        line ?? ""; // Firebase Password
-
-                    line = reader.ReadLine();
-                    settingsValuesInstance.ApiKey =
-                        line ?? ""; // Firebase api key
-
-                    line = reader.ReadLine();
-                    settingsValuesInstance.EventName =
-                        line ?? ""; // Name of firebase tag to fetch matches from
-
-                    line = reader.ReadLine();
-                    settingsValuesInstance.DatabaseUrl =
-                        line ?? ""; // Website of firebase connection
-
-                    // Headers to create average column
-                    var averages = reader.ReadLine();
-
-                    settingsValuesInstance.AverageHeaders = new DataTable();
-                    settingsValuesInstance.AverageHeaders.Columns.Add("Column");
-
-                    if (averages != null && averages.Split(',').ToList().Any())
-                        foreach (var v in averages.Split(',').ToList())
-                            settingsValuesInstance.AverageHeaders.Rows.Add(v);
-
-                    // Headers to create sum column
-                    var sums = reader.ReadLine();
-
-                    settingsValuesInstance.SumHeaders = new DataTable();
-                    settingsValuesInstance.SumHeaders.Columns.Add(ColumnsColumnName);
-
-                    if (sums != null && sums.Split(',').ToList().Any())
-                        foreach (var v in sums.Split(',').ToList())
-                            settingsValuesInstance.SumHeaders.Rows.Add(v);
-
-                    // Headers to create minimum column
-                    var minimums = reader.ReadLine();
-
-                    settingsValuesInstance.MinimumHeaders = new DataTable();
-                    settingsValuesInstance.MinimumHeaders.Columns.Add(ColumnsColumnName);
-
-                    if (minimums != null && minimums.Split(',').ToList().Any())
-                        foreach (var v in minimums.Split(',').ToList())
-                            settingsValuesInstance.MinimumHeaders.Rows.Add(v);
-
-                    // Headers to create maximum column
-                    var maximums = reader.ReadLine();
-
-                    settingsValuesInstance.MaximumHeaders = new DataTable();
-                    settingsValuesInstance.MaximumHeaders.Columns.Add(ColumnsColumnName);
-
-                    if (maximums != null && maximums.Split(',').ToList().Any())
-                        foreach (var v in maximums.Split(',').ToList())
-                            settingsValuesInstance.MaximumHeaders.Rows.Add(v);
+                for (; i < settingsProperties.Length; ++i)
+                {
+                    var property = settingsProperties[i];
+                    if (IsString(property))
+                    {
+                        property.SetValue(SettingsValuesInstance, "");
+                    }
+                    else if (IsDataTable(property))
+                    {
+                        var table = new DataTable();
+                        table.Columns.Add(ColumnsColumnName);
+                        property.SetValue(SettingsValuesInstance, table);
+                    }
                 }
             }
             else
             {
-                settingsValuesInstance.Username = "";
-                settingsValuesInstance.Password = "";
-                settingsValuesInstance.ApiKey = "";
-                settingsValuesInstance.EventName = "";
-                settingsValuesInstance.DatabaseUrl = "";
-                settingsValuesInstance.AverageHeaders = new DataTable();
-                settingsValuesInstance.AverageHeaders.Columns.Add("Column");
-                settingsValuesInstance.SumHeaders = new DataTable();
-                settingsValuesInstance.SumHeaders.Columns.Add("Column");
-                settingsValuesInstance.MinimumHeaders = new DataTable();
-                settingsValuesInstance.MinimumHeaders.Columns.Add("Column");
-                settingsValuesInstance.MaximumHeaders = new DataTable();
-                settingsValuesInstance.MaximumHeaders.Columns.Add("Column");
+                foreach (var property in SettingsValuesInstance.GetType().GetProperties())
+                {
+                    if (IsString(property))
+                    {
+                        property.SetValue(SettingsValuesInstance, "");
+                    }
+                    else if (IsDataTable(property))
+                    {
+                        var table = new DataTable();
+                        table.Columns.Add(ColumnsColumnName);
+                        property.SetValue(SettingsValuesInstance, table);
+                    }
+                }
             }
         }
 
+
         // Bind all of the settings values (besides the headers) to respective fields
-        private void BindValues()
+        public void BindValues()
         {
             try
             {
                 usernameTextBox.DataBindings.Clear();
                 usernameTextBox.DataBindings.Add(
                     "Text",
-                    settingsValuesInstance,
+                    SettingsValuesInstance,
                     "Username",
                     false,
                     DataSourceUpdateMode.OnPropertyChanged);
                 passwordTextBox.DataBindings.Add(
                     "Text",
-                    settingsValuesInstance,
+                    SettingsValuesInstance,
                     "Password",
                     false,
                     DataSourceUpdateMode.OnPropertyChanged);
                 apiKeyTextBox.DataBindings.Add(
                     "Text",
-                    settingsValuesInstance,
+                    SettingsValuesInstance,
                     "ApiKey",
                     false,
                     DataSourceUpdateMode.OnPropertyChanged);
                 eventNameTextBox.DataBindings.Add(
                     "Text",
-                    settingsValuesInstance,
+                    SettingsValuesInstance,
                     "EventName",
                     false,
                     DataSourceUpdateMode.OnPropertyChanged);
                 databaseUrlTextBox.DataBindings.Add(
                     "Text",
-                    settingsValuesInstance,
+                    SettingsValuesInstance,
                     "DatabaseUrl",
                     false,
                     DataSourceUpdateMode.OnPropertyChanged);
-
-                averageDataGridView.DataSource = settingsValuesInstance.AverageHeaders;
-                sumDataGridView.DataSource = settingsValuesInstance.SumHeaders;
-                minimumDataGridView.DataSource = settingsValuesInstance.MinimumHeaders;
-                maximumDataGridView.DataSource = settingsValuesInstance.MaximumHeaders;
+                averageDataGridView.DataSource = SettingsValuesInstance.AverageHeaders;
+                sumDataGridView.DataSource = SettingsValuesInstance.SumHeaders;
+                minimumDataGridView.DataSource = SettingsValuesInstance.MinimumHeaders;
+                maximumDataGridView.DataSource = SettingsValuesInstance.MaximumHeaders;
             }
             catch (Exception e)
             {
@@ -167,7 +168,7 @@ namespace BluetoothScouterPits
         private void OnFormClosing(object sender, FormClosingEventArgs e)
         {
             Hide();
-            WriteSettingsToFile();
+            WriteSettings(new StreamWriter(ConfigurationFile));
             e.Cancel = true;
         }
 
@@ -177,104 +178,45 @@ namespace BluetoothScouterPits
             FetchMatches();
         }
 
-        private async void FetchMatches()
+        public async void FetchMatches()
         {
             retreivedColumnsDataGridView.Rows.Clear();
             var results = await new DataSource(this).Get();
-
             if (!results.Any()) return;
-
             var matchObj = results.First();
             foreach (var column in matchObj.GetAllKeys())
                 retreivedColumnsDataGridView.Rows.Add(column);
         }
 
         // Called in dispose method in Settings.Designer.cs, so effectively Dispose()
-        private void WriteSettingsToFile()
+        public void WriteSettings(TextWriter outputStream)
         {
-            using (var writer = new StreamWriter(ConfigurationFile))
+            foreach (var property in SettingsValuesInstance.GetType().GetProperties())
             {
-                // Write to the file in the order of which they properties occur. 
-                // Using reflection for easier expandability, i really don't know why
-
-                #region old
-
-                /*
-                foreach (var property in settingsValuesInstance.GetType().GetProperties())
+                if (IsString(property))
+                    outputStream.WriteLine(property.GetValue(SettingsValuesInstance));
+                else if (IsDataTable(property))
                 {
-                    // Not a list of headers
-                    if (property.PropertyType != typeof(DataTable))
+                    var table = (DataTable) property.GetValue(SettingsValuesInstance);
+                    var s = "";
+                    for (var i = 0; i < table.Rows.Count; ++i)
                     {
-                        writer.WriteLine(property.GetValue(settingsValuesInstance).ToString());
+                        var row = table.Rows[i];
+                        s += row[ColumnsColumnName];
+                        if (i + 1 < table.Rows.Count)
+                            s += ",";
                     }
-
-                    // List of headers, so turn into csv for loading later on
-                    else
-                    {
-                        var value = "";
-                        Console.WriteLine(property.Name);
-                        var list = (DataTable) property.GetValue(settingsValuesInstance);
-
-                        for (var i = 0; i < list.Rows.Count; ++i)
-                        {
-                            if (string.IsNullOrWhiteSpace(value)) continue;
-
-                            value += list.Rows[i][ColumnsColumnName];
-                            if (i + 1 < list.Rows.Count)
-                                value += ","; // CSV
-                        }
-                        Console.WriteLine(value);
-                        writer.WriteLine(value);
-                    }
+                    outputStream.WriteLine(s);
                 }
-                */
-
-                #endregion
-
-                writer.WriteLine(settingsValuesInstance.Username);
-                writer.WriteLine(settingsValuesInstance.Password);
-                writer.WriteLine(settingsValuesInstance.ApiKey);
-                writer.WriteLine(settingsValuesInstance.EventName);
-                writer.WriteLine(settingsValuesInstance.DatabaseUrl);
-
-                var output = "";
-                for (var i = 0; i < AverageHeaders.Rows.Count; ++i)
-                {
-                    output += AverageHeaders.Rows[i][ColumnsColumnName].ToString();
-                    if (i + 1 < AverageHeaders.Rows.Count) output += ",";
-                }
-                writer.WriteLine(output);
-
-                output = "";
-                for (var i = 0; i < SumHeaders.Rows.Count; ++i)
-                {
-                    output += SumHeaders.Rows[i][ColumnsColumnName].ToString();
-                    if (i + 1 < SumHeaders.Rows.Count) output += ",";
-                }
-
-                output = "";
-                for (var i = 0; i < MinimumHeaders.Rows.Count; ++i)
-                {
-                    output += MinimumHeaders.Rows[i][ColumnsColumnName].ToString();
-                    if (i + 1 < MinimumHeaders.Rows.Count) output += ",";
-                }
-
-                output = "";
-                for (var i = 0; i < MaximumHeaders.Rows.Count; ++i)
-                {
-                    output += MaximumHeaders.Rows[i][ColumnsColumnName].ToString();
-                    if (i + 1 < MaximumHeaders.Rows.Count) output += ",";
-                }
-
-                writer.Flush();
             }
+            outputStream.Flush();
+            outputStream.Close();
         }
 
         // The settings model with all of the given values to keep track of
-        private class SettingsValues : INotifyPropertyChanged
+        public class SettingsValues : INotifyPropertyChanged
         {
             private string apiKey;
-
             private string databaseUrl;
             private string eventName;
             private string password;
@@ -334,7 +276,6 @@ namespace BluetoothScouterPits
             public DataTable SumHeaders { get; set; }
             public DataTable MinimumHeaders { get; set; }
             public DataTable MaximumHeaders { get; set; }
-
             public event PropertyChangedEventHandler PropertyChanged;
 
             private void InvokePropertyChanged(PropertyChangedEventArgs e)
@@ -345,15 +286,15 @@ namespace BluetoothScouterPits
 
         #region Public Settings Accessors
 
-        public string Username => settingsValuesInstance.Username;
-        public string Password => settingsValuesInstance.Password;
-        public string ApiKey => settingsValuesInstance.ApiKey;
-        public string EventName => settingsValuesInstance.EventName;
-        public string DatabaseUrl => settingsValuesInstance.DatabaseUrl;
-        public DataTable AverageHeaders => settingsValuesInstance.AverageHeaders;
-        public DataTable SumHeaders => settingsValuesInstance.SumHeaders;
-        public DataTable MinimumHeaders => settingsValuesInstance.MinimumHeaders;
-        public DataTable MaximumHeaders => settingsValuesInstance.MaximumHeaders;
+        public string Username => SettingsValuesInstance.Username;
+        public string Password => SettingsValuesInstance.Password;
+        public string ApiKey => SettingsValuesInstance.ApiKey;
+        public string EventName => SettingsValuesInstance.EventName;
+        public string DatabaseUrl => SettingsValuesInstance.DatabaseUrl;
+        public DataTable AverageHeaders => SettingsValuesInstance.AverageHeaders;
+        public DataTable SumHeaders => SettingsValuesInstance.SumHeaders;
+        public DataTable MinimumHeaders => SettingsValuesInstance.MinimumHeaders;
+        public DataTable MaximumHeaders => SettingsValuesInstance.MaximumHeaders;
 
         #endregion
     }

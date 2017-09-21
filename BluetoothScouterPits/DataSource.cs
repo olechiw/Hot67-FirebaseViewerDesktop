@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BluetoothScouterPits
 {
-    internal class DataSource
+    public class DataSource
     {
         private const string JsonMatchNumberTag = "Match Number";
         private const string JsonTeamNumberTag = "Team Number";

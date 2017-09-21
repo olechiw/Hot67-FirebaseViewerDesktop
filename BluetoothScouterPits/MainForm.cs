@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -48,18 +49,14 @@ namespace BluetoothScouterPits
 
         private void RePopulate()
         {
-            // Empty all views
-            searchDataGridView.Rows.Clear();
-            searchDataGridView.Columns.Clear();
-            pinnedDataGridView.Rows.Clear();
-            pinnedDataGridView.Columns.Clear();
             matchesDataGridView.Rows.Clear();
             matchesDataGridView.Columns.Clear();
 
-            PopulateDataGridViewCalculated(searchDataGridView, matches);
+            // Set columns and rows
+            searchDataGridView.DataSource = PopulateDataGridViewCalculated(matches);
 
             // Set columns but not rows
-            PopulateDataGridViewCalculated(pinnedDataGridView, matches, true);
+            pinnedDataGridView.DataSource = PopulateDataGridViewCalculated(matches, true);
         }
 
         private void OnSyncMenu(object sender, EventArgs e)
@@ -153,10 +150,8 @@ namespace BluetoothScouterPits
             var detailTeamNumber = row.Cells[TeamNumberColumn].Value.ToString();
 
             // Clear view and populate with new data
-            matchesDataGridView.Rows.Clear();
-            matchesDataGridView.Columns.Clear();
             var teamMatches = matches.Where(m => m.TeamNumber == detailTeamNumber);
-            PopulateDataGridViewRaw(matchesDataGridView, teamMatches.ToList());
+            matchesDataGridView.DataSource = PopulateDataGridViewRaw(teamMatches.ToList());
 
             // Go back to the saved vertical scroll position if available
             if (saveVScroll != 0 && saveVScroll < matchesDataGridView.Rows.Count)
@@ -168,18 +163,20 @@ namespace BluetoothScouterPits
         }
 
         // Fill datagridview with every available json value
-        private static void PopulateDataGridViewRaw(DataGridView v,
+        public static DataTable PopulateDataGridViewRaw(
             IReadOnlyCollection<DataSource.MatchObject> matches)
         {
-            if (matches == null || !matches.Any()) return;
+            var table = new DataTable();
+
+            if (matches == null || !matches.Any()) return table;
 
             var defaultMatch = matches.FirstOrDefault();
 
-            v.Columns.Add(TeamNumber, TeamNumber);
-            v.Columns.Add(MatchNumber, MatchNumber);
+            table.Columns.Add(TeamNumber);
+            table.Columns.Add(MatchNumber);
 
             foreach (var s in defaultMatch.GetAllKeys())
-                v.Columns.Add(s, s);
+                table.Columns.Add(s);
 
             foreach (var value in matches)
             {
@@ -189,16 +186,23 @@ namespace BluetoothScouterPits
                     value.MatchNumber
                 };
                 values.AddRange(value.GetAllValues());
-                v.Rows.Add(values.ToArray<object>());
+                table.Rows.Add(values.ToArray<object>());
             }
+
+            return table;
         }
 
         // Fill a datagridview with the teamnumber and every calculated column
-        private void PopulateDataGridViewCalculated(DataGridView v,
+        public DataTable PopulateDataGridViewCalculated(
             IReadOnlyCollection<DataSource.MatchObject> matches,
-            bool columnsOnly = false)
+            bool columnsOnly = false, Settings settings = null)
         {
-            if (matches == null || !matches.Any()) return;
+            var table = new DataTable();
+
+            if (settings == null)
+                settings = this.settings;
+
+            if (matches == null || !matches.Any()) return table;
 
             var columns = new List<string> {TeamNumber};
             var rawColumns = matches.FirstOrDefault().GetAllKeys();
@@ -210,49 +214,87 @@ namespace BluetoothScouterPits
 
             #region Enumeration and Validation of Calculated Columns
 
+            List<string> result;
             // Average columns
-            var result =
-            (from DataRow row in settings.AverageHeaders.Rows
-                select (string) row[Settings.ColumnsColumnName]
-                into column
-                where rawColumns.Contains(column)
-                select column).ToList();
+            try
+            {
+                result =
+                (from DataRow row in settings.AverageHeaders.Rows
+                    select (string)row[Settings.ColumnsColumnName]
+                    into column
+                    where rawColumns.Contains(column)
+                    select column).ToList();
 
-            columns.AddRange(result.Select(r => Average + r));
-            averageColumns.AddRange(result);
+                columns.AddRange(result.Select(r => Average + r));
+                averageColumns.AddRange(result);
+            }
+            // Exceptions from user deleting all rows
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
 
             // Sum columns
-            result =
-            (from DataRow row in settings.SumHeaders.Rows
-                select (string) row[Settings.ColumnsColumnName]
-                into column
-                where rawColumns.Contains(column)
-                select column).ToList();
+            try
+            {
+                result =
+                (from DataRow row in settings.SumHeaders.Rows
+                    select (string) row[Settings.ColumnsColumnName]
+                    into column
+                    where rawColumns.Contains(column)
+                    select column).ToList();
+                columns.AddRange(result.Select(r => Sum + r));
+                sumColumns.AddRange(result);
+            // Exceptions from user deleting all rows
+            }
+            catch (Exception e)
+            { 
+                Console.WriteLine(e);
+            }
 
-            columns.AddRange(result.Select(r => Sum + r));
-            sumColumns.AddRange(result);
+
 
             // Minimum columns
-            result =
-            (from DataRow row in settings.MinimumHeaders.Rows
-                select (string) row[Settings.ColumnsColumnName]
-                into column
-                where rawColumns.Contains(column)
-                select column).ToList();
+            try
+            {
+                result =
+                (from DataRow row in settings.MinimumHeaders.Rows
+                    select (string) row[Settings.ColumnsColumnName]
+                    into column
+                    where rawColumns.Contains(column)
+                    select column).ToList();
 
-            columns.AddRange(result.Select(r => Minimum + r));
-            minimumColumns.AddRange(result);
+                columns.AddRange(result.Select(r => Minimum + r));
+                minimumColumns.AddRange(result);
+            }            
+            // Exceptions from user deleting all rows
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+
 
             // Maximum columns
-            result =
-            (from DataRow row in settings.MaximumHeaders.Rows
-                select (string) row[Settings.ColumnsColumnName]
-                into column
-                where rawColumns.Contains(column)
-                select column).ToList();
+            try
+            {
+                result =
+                (from DataRow row in settings.MaximumHeaders.Rows
+                    select (string)row[Settings.ColumnsColumnName]
+                    into column
+                    where rawColumns.Contains(column)
+                    select column).ToList();
 
-            columns.AddRange(result.Select(r => Maximum + r));
-            maximumColumns.AddRange(result);
+                columns.AddRange(result.Select(r => Maximum + r));
+                maximumColumns.AddRange(result);
+            }
+            // Exceptions from user deleting all rows
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
 
             #endregion
 
@@ -293,12 +335,14 @@ namespace BluetoothScouterPits
             }
 
             foreach (var c in columns)
-                v.Columns.Add(c, c);
+                table.Columns.Add(c);
 
-            if (columnsOnly) return;
+            if (columnsOnly) return table;
 
             foreach (var r in rows)
-                v.Rows.Add(r.ToArray<object>());
+                table.Rows.Add(r.ToArray<object>());
+
+            return table;
         }
 
         // Pinning and unpinning of rows
@@ -317,9 +361,13 @@ namespace BluetoothScouterPits
                 return;
 
             var finalRow = (DataGridViewRow) searchDataGridView.CurrentRow.Clone();
+            var values = new List<string>();
+
             for (var i = 0; i < searchDataGridView.CurrentRow.Cells.Count; ++i)
-                finalRow.Cells[i].Value = searchDataGridView.CurrentRow.Cells[i].Value;
-            pinnedDataGridView.Rows.Add(finalRow);
+                values.Add((string) searchDataGridView.CurrentRow.Cells[i].Value);
+
+            // pinnedDataGridView.Rows.Add(finalRow);
+            ((DataTable) pinnedDataGridView.DataSource).Rows.Add(values.ToArray());
 
             SynchronizeSelections(searchDataGridView, pinnedDataGridView);
         }
@@ -336,9 +384,7 @@ namespace BluetoothScouterPits
         private void OnSearchTextChanged(object sender, EventArgs e)
         {
             var query = matches.Where(m => m.TeamNumber.Contains(searchBox.Text)).ToList();
-            searchDataGridView.Rows.Clear();
-            searchDataGridView.Columns.Clear();
-            PopulateDataGridViewCalculated(searchDataGridView, query);
+            searchDataGridView.DataSource = PopulateDataGridViewCalculated(query);
         }
 
         // Safely convert a string to an integer, checks int+boolean, defaults to 0
@@ -378,6 +424,7 @@ namespace BluetoothScouterPits
         private void OnMasterViewSelectionChanged(object sender, EventArgs e)
         {
             var row = ((DataGridView) sender).CurrentRow;
+            if (row == null) return;
             row.Selected = false;
             row.Selected = true;
         }
