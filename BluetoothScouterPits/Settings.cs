@@ -11,7 +11,7 @@ namespace BluetoothScouterPits
 {
     public partial class Settings : Form
     {
-        protected const string ConfigurationFile = "config.cfg";
+        public const string ConfigurationFile = "config.cfg";
 
         public const string ColumnsColumnName = "Column";
         // Name of datatable column for the calculated columns
