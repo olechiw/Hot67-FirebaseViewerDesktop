@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -11,9 +11,10 @@ namespace BluetoothScouterPits
     public partial class MainForm : Form
     {
         private const int TeamNumberColumn = 0;
-        private const int MatchNumberColumn = 1;
+
         // Have to be the same as in the scouting application!
         private const string TeamNumber = "Team Number";
+
         private const string MatchNumber = "Match Number";
         private const string Average = "Average of: ";
         private const string Sum = "Sum of: ";
@@ -22,7 +23,7 @@ namespace BluetoothScouterPits
 
 
         private readonly DataSource database;
-        private readonly Settings settings = new Settings();
+        private readonly SettingsForm settingsForm = new SettingsForm();
 
         private List<DataSource.MatchObject> matches;
 
@@ -34,7 +35,7 @@ namespace BluetoothScouterPits
 
             SetWatermark(searchBox, "Search By Team");
 
-            database = new DataSource(settings);
+            database = new DataSource(settingsForm);
 
             Sync();
         }
@@ -42,16 +43,21 @@ namespace BluetoothScouterPits
         private async void Sync()
         {
             database.RefreshCredentials();
-            matches = await database.Get();
+            try
+            {
+                matches = await database.Get();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
 
             RePopulate();
         }
 
         private void RePopulate()
         {
-            matchesDataGridView.Rows.Clear();
-            matchesDataGridView.Columns.Clear();
-
             // Set columns and rows
             searchDataGridView.DataSource = PopulateDataGridViewCalculated(matches);
 
@@ -66,7 +72,7 @@ namespace BluetoothScouterPits
 
         private void OnSettingsMenu(object sender, EventArgs e)
         {
-            settings.ShowDialog();
+            settingsForm.ShowDialog();
             RePopulate();
         }
 
@@ -130,11 +136,11 @@ namespace BluetoothScouterPits
             synchronizedViews = false;
         }
 
-        // Show all the available matches for a selected team
+        // Show all the available inputMatches for a selected team
         private void ShowDetailMatches(DataGridViewRow row)
         {
             // Null checks
-            if (row?.Cells?[TeamNumberColumn]?.Value == null) return;
+            if (row?.Cells[TeamNumberColumn]?.Value == null) return;
 
             // Remember the vertical scroll position of the DataGridView
             var saveVScroll = 0;
@@ -175,8 +181,9 @@ namespace BluetoothScouterPits
             table.Columns.Add(TeamNumber);
             table.Columns.Add(MatchNumber);
 
-            foreach (var s in defaultMatch.GetAllKeys())
-                table.Columns.Add(s);
+            if (defaultMatch != null)
+                foreach (var s in defaultMatch.GetAllKeys())
+                    table.Columns.Add(s);
 
             foreach (var value in matches)
             {
@@ -194,18 +201,21 @@ namespace BluetoothScouterPits
 
         // Fill a datagridview with the teamnumber and every calculated column
         public DataTable PopulateDataGridViewCalculated(
-            IReadOnlyCollection<DataSource.MatchObject> matches,
-            bool columnsOnly = false, Settings settings = null)
+            IReadOnlyCollection<DataSource.MatchObject> inputMatches,
+            bool columnsOnly = false, SettingsForm inputSettings = null)
         {
             var table = new DataTable();
 
-            if (settings == null)
-                settings = this.settings;
+            if (inputSettings == null)
+                inputSettings = settingsForm;
 
-            if (matches == null || !matches.Any()) return table;
+            if (inputMatches == null || !inputMatches.Any()) return table;
 
             var columns = new List<string> {TeamNumber};
-            var rawColumns = matches.FirstOrDefault().GetAllKeys();
+            var firstOrDefault = inputMatches.FirstOrDefault();
+            if (firstOrDefault == null) return table;
+
+            var rawColumns = firstOrDefault.GetAllKeys();
 
             var averageColumns = new List<string>();
             var sumColumns = new List<string>();
@@ -219,8 +229,8 @@ namespace BluetoothScouterPits
             try
             {
                 result =
-                (from DataRow row in settings.AverageHeaders.Rows
-                    select (string)row[Settings.ColumnsColumnName]
+                (from DataRow row in inputSettings.AverageHeaders.Rows
+                    select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
                     select column).ToList();
@@ -239,35 +249,34 @@ namespace BluetoothScouterPits
             try
             {
                 result =
-                (from DataRow row in settings.SumHeaders.Rows
-                    select (string) row[Settings.ColumnsColumnName]
+                (from DataRow row in inputSettings.SumHeaders.Rows
+                    select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
                     select column).ToList();
                 columns.AddRange(result.Select(r => Sum + r));
                 sumColumns.AddRange(result);
-            // Exceptions from user deleting all rows
+                // Exceptions from user deleting all rows
             }
             catch (Exception e)
-            { 
+            {
                 Console.WriteLine(e);
             }
-
 
 
             // Minimum columns
             try
             {
                 result =
-                (from DataRow row in settings.MinimumHeaders.Rows
-                    select (string) row[Settings.ColumnsColumnName]
+                (from DataRow row in inputSettings.MinimumHeaders.Rows
+                    select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
                     select column).ToList();
 
                 columns.AddRange(result.Select(r => Minimum + r));
                 minimumColumns.AddRange(result);
-            }            
+            }
             // Exceptions from user deleting all rows
             catch (Exception e)
             {
@@ -275,13 +284,12 @@ namespace BluetoothScouterPits
             }
 
 
-
             // Maximum columns
             try
             {
                 result =
-                (from DataRow row in settings.MaximumHeaders.Rows
-                    select (string)row[Settings.ColumnsColumnName]
+                (from DataRow row in inputSettings.MaximumHeaders.Rows
+                    select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
                     select column).ToList();
@@ -295,10 +303,9 @@ namespace BluetoothScouterPits
                 Console.WriteLine(e);
             }
 
-
             #endregion
 
-            var teams = matches.Select(m => m.TeamNumber).Distinct().ToList();
+            var teams = inputMatches.Select(m => m.TeamNumber).Distinct().ToList();
             var rows = new List<List<string>>();
 
 
@@ -310,23 +317,23 @@ namespace BluetoothScouterPits
                 };
 
                 row.AddRange(
-                    averageColumns.Select(column => matches.Where(m => m.TeamNumber == t)
+                    averageColumns.Select(column => inputMatches.Where(m => m.TeamNumber == t)
                             .Select(m => SafeNumberConversion(m.GetValue(column)))
                             .Average()
-                            .ToString())
+                            .ToString(CultureInfo.InvariantCulture))
                         .ToList());
 
-                row.AddRange(sumColumns.Select(column => matches.Where(m => m.TeamNumber == t)
+                row.AddRange(sumColumns.Select(column => inputMatches.Where(m => m.TeamNumber == t)
                     .Select(m => SafeNumberConversion(m.GetValue(column)))
                     .Sum()
                     .ToString()));
 
-                row.AddRange(minimumColumns.Select(column => matches.Where(m => m.TeamNumber == t)
+                row.AddRange(minimumColumns.Select(column => inputMatches.Where(m => m.TeamNumber == t)
                     .Select(m => SafeNumberConversion(m.GetValue(column)))
                     .Min()
                     .ToString()));
 
-                row.AddRange(maximumColumns.Select(column => matches.Where(m => m.TeamNumber == t)
+                row.AddRange(maximumColumns.Select(column => inputMatches.Where(m => m.TeamNumber == t)
                     .Select(m => SafeNumberConversion(m.GetValue(column)))
                     .Max()
                     .ToString()));
@@ -360,7 +367,6 @@ namespace BluetoothScouterPits
                               row.Cells[TeamNumberColumn].Value))
                 return;
 
-            var finalRow = (DataGridViewRow) searchDataGridView.CurrentRow.Clone();
             var values = new List<string>();
 
             for (var i = 0; i < searchDataGridView.CurrentRow.Cells.Count; ++i)
@@ -371,6 +377,7 @@ namespace BluetoothScouterPits
 
             SynchronizeSelections(searchDataGridView, pinnedDataGridView);
         }
+
         private void OnPinnedViewDoubleClick(object sender, EventArgs e)
         {
             if (pinnedDataGridView?.CurrentRow == null) return;
@@ -416,6 +423,7 @@ namespace BluetoothScouterPits
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam,
             [MarshalAs(UnmanagedType.LPWStr)] string lParam);
+
         public static void SetWatermark(MaskedTextBox box, string message)
         {
             SendMessage(box.Handle, 0x1501, 1, message);

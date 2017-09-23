@@ -43,9 +43,9 @@
             this.searchDataGridView = new System.Windows.Forms.DataGridView();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.label1 = new System.Windows.Forms.Label();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
-            this.label1 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pinnedDataGridView)).BeginInit();
@@ -98,7 +98,7 @@
             // 
             this.syncToolStripMenuItem.Name = "syncToolStripMenuItem";
             this.syncToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.syncToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.syncToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.syncToolStripMenuItem.Text = "Sync";
             this.syncToolStripMenuItem.Click += new System.EventHandler(this.OnSyncMenu);
             // 
@@ -107,15 +107,15 @@
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
             | System.Windows.Forms.Keys.S)));
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.settingsToolStripMenuItem.Text = "Settings";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.settingsToolStripMenuItem.Text = "SettingsForm";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.OnSettingsMenu);
             // 
             // resetMenuItem
             // 
             this.resetMenuItem.Name = "resetMenuItem";
             this.resetMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
-            this.resetMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.resetMenuItem.Size = new System.Drawing.Size(216, 22);
             this.resetMenuItem.Text = "Reset";
             this.resetMenuItem.Click += new System.EventHandler(this.OnResetMenu);
             // 
@@ -123,7 +123,7 @@
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.OnExitMenu);
             // 
@@ -244,6 +244,18 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1083, 24);
             this.tableLayoutPanel1.TabIndex = 2;
             // 
+            // label1
+            // 
+            this.label1.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(304, 3);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(636, 18);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Double click to pin/unpin,  Ctrl+S to sync, Ctrl+Shift+S to access SettingsForm, " +
+    "Ctrl + E to reset";
+            // 
             // tableLayoutPanel2
             // 
             this.tableLayoutPanel2.ColumnCount = 2;
@@ -273,18 +285,6 @@
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel4.Size = new System.Drawing.Size(536, 491);
             this.tableLayoutPanel4.TabIndex = 0;
-            // 
-            // label1
-            // 
-            this.label1.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(322, 3);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(600, 18);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Double click to pin/unpin,  Ctrl+S to sync, Ctrl+Shift+S to access Settings, Ctrl" +
-    " + E to reset";
             // 
             // MainForm
             // 

@@ -1,13 +1,8 @@
-﻿using System;
-using System.Reflection;
-using BluetoothScouterPits;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
+using BluetoothScouterPits;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PitScouterTest
@@ -18,16 +13,12 @@ namespace PitScouterTest
         // Test configuration file for an actual database to pull expected data from
         private const string TestConfigurationFile = "UnitTestConfig.cfg";
 
-        // Properties to test reflection methods
-        private int intProperty { get; }
         private const string IntPropertyName = "intProperty";
-        private string stringProperty { get; }
         private const string StringPropertyName = "stringProperty";
-        private DataTable dataTableProperty { get; }
         private const string DataTablePropertyName = "dataTableProperty";
 
         // Test config values for assertion that reading/writing to config file works
-        private readonly List<string> testConfigValues = new List<string>()
+        private readonly List<string> testConfigValues = new List<string>
         {
             "email",
             "password",
@@ -40,6 +31,12 @@ namespace PitScouterTest
             "1,2,3,4,5"
         };
 
+        // Properties to test reflection methods
+        public int intProperty => 1;
+
+        public string stringProperty => "string";
+        public DataTable dataTableProperty => new DataTable();
+
         [TestMethod]
         public void TestIsString()
         {
@@ -48,10 +45,9 @@ namespace PitScouterTest
             var pTable = GetType().GetProperty(DataTablePropertyName);
 
 
-            Assert.IsFalse(Settings.IsString(pInt));
-            Assert.IsTrue(Settings.IsString(pString));
-            Assert.IsFalse(Settings.IsString(pTable));
-
+            Assert.IsFalse(SettingsForm.IsString(pInt));
+            Assert.IsTrue(SettingsForm.IsString(pString));
+            Assert.IsFalse(SettingsForm.IsString(pTable));
         }
 
         [TestMethod]
@@ -61,9 +57,9 @@ namespace PitScouterTest
             var pString = GetType().GetProperty(StringPropertyName);
             var pTable = GetType().GetProperty(DataTablePropertyName);
 
-            Assert.IsFalse(Settings.IsDataTable(pInt));
-            Assert.IsFalse(Settings.IsDataTable(pString));
-            Assert.IsTrue(Settings.IsDataTable(pTable));
+            Assert.IsFalse(SettingsForm.IsDataTable(pInt));
+            Assert.IsFalse(SettingsForm.IsDataTable(pString));
+            Assert.IsTrue(SettingsForm.IsDataTable(pTable));
         }
 
         [TestMethod]
@@ -72,16 +68,17 @@ namespace PitScouterTest
             var testConfig = testConfigValues.Aggregate((current, next) => current + next);
             var reader = new StringReader(testConfig);
 
-            var result = new Settings(true).ReadSettings(reader);
+            var result = new SettingsForm(testing: true).ReadSettings(reader);
 
+            var resultConfig = result.Aggregate((s, s1) => s + s1);
             // Assure were read properly
-            Assert.AreEqual(testConfig, result.Aggregate((current, next) => current + next));
+            Assert.AreEqual(testConfig, resultConfig);
         }
 
         [TestMethod]
         public void TestWriteSettings()
         {
-            var settings = new Settings(true);
+            var settings = new SettingsForm(testing: true);
 
             // Load testing configuration
             settings.SetSettingsProperties(testConfigValues);
@@ -89,8 +86,18 @@ namespace PitScouterTest
             var writer = new StringWriter();
             settings.WriteSettings(writer);
 
+            var resultConfig = new List<string>();
+            var reader = new StringReader(writer.ToString());
+            var line = reader.ReadLine();
+            while (line != null)
+            {
+                resultConfig.Add(line);
+                line = reader.ReadLine();
+            }
+
             // Assure were written properly
-            Assert.AreEqual(testConfigValues.Aggregate(((s, s1) => s + s1)), writer.ToString());
+            Assert.AreEqual(testConfigValues.Aggregate((s, s1) => s + s1),
+                resultConfig.Aggregate((s, s1) => s + s1));
         }
     }
 }

@@ -13,11 +13,11 @@ namespace BluetoothScouterPits
         private const string JsonMatchNumberTag = "Match Number";
         private const string JsonTeamNumberTag = "Team Number";
 
-        private readonly Settings settings;
+        private readonly IFirebaseSettingsObject settings;
 
         private FirebaseClient database;
 
-        public DataSource(Settings firebaseSettings)
+        public DataSource(IFirebaseSettingsObject firebaseSettings)
         {
             settings = firebaseSettings;
 
@@ -41,32 +41,45 @@ namespace BluetoothScouterPits
         public async Task<List<MatchObject>> Get(string name)
         {
             var result = await database.Child(name).OnceAsync<JObject>();
-            var results = new List<MatchObject>();
-            foreach (var r in result)
-                results.Add(new MatchObject(r.Object));
-            return results;
+
+            return result.Select(r => new MatchObject(r.Object)).ToList();
         }
 
         public void RefreshCredentials()
         {
-            // Initialize connection with Firebase
-            database = new FirebaseClient(settings.DatabaseUrl,
-                new FirebaseOptions
-                {
-                    AuthTokenAsyncFactory = () => LoginASync()
-                });
+            try
+            {
+                // Initialize connection with Firebase
+                database = new FirebaseClient(settings.DatabaseUrl,
+                    new FirebaseOptions
+                    {
+                        AuthTokenAsyncFactory = () => LoginASync()
+                    });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         // The authentication method
         public async Task<string> LoginASync()
         {
-            var authProvider = new FirebaseAuthProvider(
-                new FirebaseConfig(settings.ApiKey));
-            var auth = await authProvider
-                .SignInWithEmailAndPasswordAsync(
-                    settings.Username, settings.Password);
+            try
+            {
+                var authProvider = new FirebaseAuthProvider(
+                    new FirebaseConfig(settings.ApiKey));
+                var auth = await authProvider
+                    .SignInWithEmailAndPasswordAsync(
+                        settings.Username, settings.Password);
 
-            return auth.FirebaseToken;
+                return auth.FirebaseToken;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return "";
+            }
         }
 
         // A match object with publicly accessible matchnumber and teamnumber, 

@@ -2,7 +2,7 @@
 
 namespace BluetoothScouterPits
 {
-    partial class Settings
+    partial class SettingsForm
     {
         /// <summary>
         /// Required designer variable.
@@ -20,7 +20,7 @@ namespace BluetoothScouterPits
                 if (components != null)
                     components.Dispose();
 
-                WriteSettings(new StreamWriter(ConfigurationFile));
+                WriteSettings(new StreamWriter(configurationFile));
             }
             base.Dispose(disposing);
         }
@@ -311,7 +311,7 @@ namespace BluetoothScouterPits
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Retreived Columns";
             // 
-            // Settings
+            // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -332,9 +332,9 @@ namespace BluetoothScouterPits
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "Settings";
+            this.Name = "SettingsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Settings";
+            this.Text = "SettingsForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnFormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.averageDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.sumDataGridView)).EndInit();

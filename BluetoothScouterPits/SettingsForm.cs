@@ -9,24 +9,26 @@ using System.Windows.Forms;
 
 namespace BluetoothScouterPits
 {
-    public partial class Settings : Form
+    public partial class SettingsForm : Form, IFirebaseSettingsObject
     {
-        public const string ConfigurationFile = "config.cfg";
-
         public const string ColumnsColumnName = "Column";
+
+        private readonly string configurationFile;
         // Name of datatable column for the calculated columns
 
         // A private class with public members of the values, to use for databinding
         protected readonly SettingsValues SettingsValuesInstance = new SettingsValues();
 
 
-        public Settings(bool testing = false)
+        public SettingsForm(string configFile = "config.cfg", bool testing = false)
         {
+            configurationFile = configFile;
+
             InitializeComponent();
             if (testing) return;
 
-            SetSettingsProperties(File.Exists(ConfigurationFile)
-                ? ReadSettings(new StreamReader(ConfigurationFile))
+            SetSettingsProperties(File.Exists(configurationFile)
+                ? ReadSettings(new StreamReader(configurationFile))
                 : null);
 
             BindValues();
@@ -36,8 +38,6 @@ namespace BluetoothScouterPits
         // Load the settings from the configuration file
         public List<string> ReadSettings(TextReader reader)
         {
-            if (!File.Exists(ConfigurationFile)) return null;
-
             var config = new List<string>();
             var line = reader.ReadLine();
             while (line != null)
@@ -51,11 +51,15 @@ namespace BluetoothScouterPits
             return config;
         }
 
-        public static bool IsString(PropertyInfo p) =>
-            p.PropertyType.Name == "String";
+        public static bool IsString(PropertyInfo p)
+        {
+            return p.PropertyType.Name == "String";
+        }
 
-        public static bool IsDataTable(PropertyInfo p) =>
-            p.PropertyType.Name == "DataTable";
+        public static bool IsDataTable(PropertyInfo p)
+        {
+            return p.PropertyType.Name == "DataTable";
+        }
 
         public void SetSettingsProperties(IReadOnlyList<string> values)
         {
@@ -65,7 +69,6 @@ namespace BluetoothScouterPits
 
                 var i = 0;
                 for (; i < values.Count; ++i)
-                {
                     if (IsDataTable(settingsProperties[i]))
                     {
                         var table = new DataTable();
@@ -75,8 +78,9 @@ namespace BluetoothScouterPits
                         settingsProperties[i].SetValue(SettingsValuesInstance, table);
                     }
                     else if (IsString(settingsProperties[i]))
+                    {
                         settingsProperties[i].SetValue(SettingsValuesInstance, values[i]);
-                }
+                    }
                 // Account for extra values not stored, only continue if some leftover
                 if (i + 1 >= settingsProperties.Length) return;
 
@@ -98,7 +102,6 @@ namespace BluetoothScouterPits
             else
             {
                 foreach (var property in SettingsValuesInstance.GetType().GetProperties())
-                {
                     if (IsString(property))
                     {
                         property.SetValue(SettingsValuesInstance, "");
@@ -109,7 +112,6 @@ namespace BluetoothScouterPits
                         table.Columns.Add(ColumnsColumnName);
                         property.SetValue(SettingsValuesInstance, table);
                     }
-                }
             }
         }
 
@@ -168,7 +170,7 @@ namespace BluetoothScouterPits
         private void OnFormClosing(object sender, FormClosingEventArgs e)
         {
             Hide();
-            WriteSettings(new StreamWriter(ConfigurationFile));
+            WriteSettings(new StreamWriter(configurationFile));
             e.Cancel = true;
         }
 
@@ -181,20 +183,30 @@ namespace BluetoothScouterPits
         public async void FetchMatches()
         {
             retreivedColumnsDataGridView.Rows.Clear();
-            var results = await new DataSource(this).Get();
-            if (!results.Any()) return;
-            var matchObj = results.First();
-            foreach (var column in matchObj.GetAllKeys())
-                retreivedColumnsDataGridView.Rows.Add(column);
+
+            try
+            {
+                var results = await new DataSource(this).Get();
+
+                if (!results.Any()) return;
+                var matchObj = results.First();
+                foreach (var column in matchObj.GetAllKeys())
+                    retreivedColumnsDataGridView.Rows.Add(column);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
-        // Called in dispose method in Settings.Designer.cs, so effectively Dispose()
+        // Called in dispose method in SettingsForm.Designer.cs, so effectively Dispose()
         public void WriteSettings(TextWriter outputStream)
         {
             foreach (var property in SettingsValuesInstance.GetType().GetProperties())
-            {
                 if (IsString(property))
+                {
                     outputStream.WriteLine(property.GetValue(SettingsValuesInstance));
+                }
                 else if (IsDataTable(property))
                 {
                     var table = (DataTable) property.GetValue(SettingsValuesInstance);
@@ -208,7 +220,6 @@ namespace BluetoothScouterPits
                     }
                     outputStream.WriteLine(s);
                 }
-            }
             outputStream.Flush();
             outputStream.Close();
         }
@@ -284,7 +295,7 @@ namespace BluetoothScouterPits
             }
         }
 
-        #region Public Settings Accessors
+        #region Public SettingsForm Accessors
 
         public string Username => SettingsValuesInstance.Username;
         public string Password => SettingsValuesInstance.Password;
