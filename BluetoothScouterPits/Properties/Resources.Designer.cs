@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BluetoothScouterPits.Properties
+namespace BluetoothScouterPits.Model.Model.Properties
 {
 
 

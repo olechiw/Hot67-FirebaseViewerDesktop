@@ -4,7 +4,9 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using BluetoothScouterPits.Model;
 
 namespace BluetoothScouterPits
 {
@@ -23,14 +25,16 @@ namespace BluetoothScouterPits
 
 
         private readonly DataSource database;
-        private readonly SettingsForm settingsForm = new SettingsForm();
+        private readonly SettingsForm settingsForm;
 
-        private List<DataSource.MatchObject> matches;
+        private List<MatchObject> matches;
 
         private bool synchronizedViews;
 
-        public MainForm()
+        public MainForm(SettingsForm form = null)
         {
+            settingsForm = form ?? new SettingsForm();
+
             InitializeComponent();
 
             SetWatermark(searchBox, "Search By Team");
@@ -59,10 +63,10 @@ namespace BluetoothScouterPits
         private void RePopulate()
         {
             // Set columns and rows
-            searchDataGridView.DataSource = PopulateDataGridViewCalculated(matches);
+            searchDataGridView.DataSource = GetCalculatedDataTable(matches);
 
             // Set columns but not rows
-            pinnedDataGridView.DataSource = PopulateDataGridViewCalculated(matches, true);
+            pinnedDataGridView.DataSource = GetCalculatedDataTable(matches, true);
         }
 
         private void OnSyncMenu(object sender, EventArgs e)
@@ -157,7 +161,7 @@ namespace BluetoothScouterPits
 
             // Clear view and populate with new data
             var teamMatches = matches.Where(m => m.TeamNumber == detailTeamNumber);
-            matchesDataGridView.DataSource = PopulateDataGridViewRaw(teamMatches.ToList());
+            matchesDataGridView.DataSource = GetRawDataTable(teamMatches.ToList());
 
             // Go back to the saved vertical scroll position if available
             if (saveVScroll != 0 && saveVScroll < matchesDataGridView.Rows.Count)
@@ -169,8 +173,8 @@ namespace BluetoothScouterPits
         }
 
         // Fill datagridview with every available json value
-        public static DataTable PopulateDataGridViewRaw(
-            IReadOnlyCollection<DataSource.MatchObject> matches)
+        public static DataTable GetRawDataTable(
+            IReadOnlyCollection<MatchObject> matches)
         {
             var table = new DataTable();
 
@@ -200,9 +204,11 @@ namespace BluetoothScouterPits
         }
 
         // Fill a datagridview with the teamnumber and every calculated column
-        public DataTable PopulateDataGridViewCalculated(
-            IReadOnlyCollection<DataSource.MatchObject> inputMatches,
-            bool columnsOnly = false, SettingsForm inputSettings = null)
+        public async Task<DataTable> GetCalculatedDataTable() =>
+            GetCalculatedDataTable(await database.Get()); // Use supplied data source's full match set
+        public DataTable GetCalculatedDataTable(
+            IReadOnlyCollection<MatchObject> inputMatches, // Used to create columns
+            bool columnsOnly = false, SettingsForm inputSettings = null) // Special settings
         {
             var table = new DataTable();
 
@@ -229,7 +235,7 @@ namespace BluetoothScouterPits
             try
             {
                 result =
-                (from DataRow row in inputSettings.AverageHeaders.Rows
+                (from DataRow row in inputSettings.AverageColumns.Rows
                     select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
@@ -249,7 +255,7 @@ namespace BluetoothScouterPits
             try
             {
                 result =
-                (from DataRow row in inputSettings.SumHeaders.Rows
+                (from DataRow row in inputSettings.SumColumns.Rows
                     select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
@@ -268,7 +274,7 @@ namespace BluetoothScouterPits
             try
             {
                 result =
-                (from DataRow row in inputSettings.MinimumHeaders.Rows
+                (from DataRow row in inputSettings.MinimumColumns.Rows
                     select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
@@ -288,7 +294,7 @@ namespace BluetoothScouterPits
             try
             {
                 result =
-                (from DataRow row in inputSettings.MaximumHeaders.Rows
+                (from DataRow row in inputSettings.MaximumColumns.Rows
                     select (string) row[SettingsForm.ColumnsColumnName]
                     into column
                     where rawColumns.Contains(column)
@@ -391,7 +397,7 @@ namespace BluetoothScouterPits
         private void OnSearchTextChanged(object sender, EventArgs e)
         {
             var query = matches.Where(m => m.TeamNumber.Contains(searchBox.Text)).ToList();
-            searchDataGridView.DataSource = PopulateDataGridViewCalculated(query);
+            searchDataGridView.DataSource = GetCalculatedDataTable(query);
         }
 
         // Safely convert a string to an integer, checks int+boolean, defaults to 0

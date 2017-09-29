@@ -2,25 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BluetoothScouterPits.Interfaces;
 using Firebase.Auth;
 using Firebase.Database;
 using Newtonsoft.Json.Linq;
 
-namespace BluetoothScouterPits
+namespace BluetoothScouterPits.Model
 {
-    public class DataSource
+    public class DataSource : IDataSourceObject
     {
-        private const string JsonMatchNumberTag = "Match Number";
-        private const string JsonTeamNumberTag = "Team Number";
-
-        private readonly IFirebaseSettingsObject settings;
-
         private FirebaseClient database;
+        private IFirebaseSettingsObject settings;
 
-        public DataSource(IFirebaseSettingsObject firebaseSettings)
+        public DataSource(IFirebaseSettingsObject firebaseSettings = null)
+        {
+            SetSettings(firebaseSettings);
+        }
+
+        public void SetSettings(IFirebaseSettingsObject firebaseSettings)
         {
             settings = firebaseSettings;
-
             RefreshCredentials();
         }
 
@@ -71,7 +72,7 @@ namespace BluetoothScouterPits
                     new FirebaseConfig(settings.ApiKey));
                 var auth = await authProvider
                     .SignInWithEmailAndPasswordAsync(
-                        settings.Username, settings.Password);
+                        settings.Email, settings.Password);
 
                 return auth.FirebaseToken;
             }
@@ -82,42 +83,9 @@ namespace BluetoothScouterPits
             }
         }
 
-        // A match object with publicly accessible matchnumber and teamnumber, 
-        // in addition to existing tags. This way json ops are not exposed outside of this class
-        public class MatchObject
+        public async Task<List<MatchObject>> Get(int top)
         {
-            private readonly JObject values;
-
-            public MatchObject(JObject json)
-            {
-                values = json;
-                MatchNumber = json[JsonMatchNumberTag].Value<string>();
-                TeamNumber = json[JsonTeamNumberTag].Value<string>();
-                json.Remove(JsonMatchNumberTag);
-                json.Remove(JsonTeamNumberTag);
-            }
-
-            public string MatchNumber { get; }
-            public string TeamNumber { get; }
-
-            // GetValue a specific value based on key
-            public string GetValue(string key)
-            {
-                return values[key].Value<string>();
-            }
-
-            // GetValue all values
-            public List<string> GetAllValues()
-            {
-                return values.PropertyValues()
-                    .Select(r => r.Value<string>()).ToList();
-            }
-
-            // GetValue all keys
-            public List<string> GetAllKeys()
-            {
-                return values.Properties().Select(p => p.Name).ToList();
-            }
+            return (await Get()).Take(top).ToList();
         }
     }
 }

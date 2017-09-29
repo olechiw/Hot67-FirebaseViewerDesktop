@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace BluetoothScouterPits
+namespace BluetoothScouterPits.Model
 {
     internal static class Program
     {

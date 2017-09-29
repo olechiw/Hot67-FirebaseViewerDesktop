@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -6,10 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using BluetoothScouterPits.Interfaces;
+using BluetoothScouterPits.Model;
 
 namespace BluetoothScouterPits
 {
-    public partial class SettingsForm : Form, IFirebaseSettingsObject
+    public partial class SettingsForm : Form, IFirebaseSettingsObject, ICalculatedColumnsObject
     {
         public const string ColumnsColumnName = "Column";
 
@@ -61,6 +63,7 @@ namespace BluetoothScouterPits
             return p.PropertyType.Name == "DataTable";
         }
 
+        // Set all of the settingsInstance values based on the input
         public void SetSettingsProperties(IReadOnlyList<string> values)
         {
             if (values != null)
@@ -125,7 +128,7 @@ namespace BluetoothScouterPits
                 usernameTextBox.DataBindings.Add(
                     "Text",
                     SettingsValuesInstance,
-                    "Username",
+                    "Email",
                     false,
                     DataSourceUpdateMode.OnPropertyChanged);
                 passwordTextBox.DataBindings.Add(
@@ -152,10 +155,10 @@ namespace BluetoothScouterPits
                     "DatabaseUrl",
                     false,
                     DataSourceUpdateMode.OnPropertyChanged);
-                averageDataGridView.DataSource = SettingsValuesInstance.AverageHeaders;
-                sumDataGridView.DataSource = SettingsValuesInstance.SumHeaders;
-                minimumDataGridView.DataSource = SettingsValuesInstance.MinimumHeaders;
-                maximumDataGridView.DataSource = SettingsValuesInstance.MaximumHeaders;
+                averageDataGridView.DataSource = SettingsValuesInstance.AverageColumns;
+                sumDataGridView.DataSource = SettingsValuesInstance.SumColumns;
+                minimumDataGridView.DataSource = SettingsValuesInstance.MinimumColumns;
+                maximumDataGridView.DataSource = SettingsValuesInstance.MaximumColumns;
             }
             catch (Exception e)
             {
@@ -229,17 +232,17 @@ namespace BluetoothScouterPits
         {
             private string apiKey;
             private string databaseUrl;
+            private string email;
             private string eventName;
             private string password;
-            private string username;
 
-            public string Username
+            public string Email
             {
-                get => username;
+                get => email;
                 set
                 {
-                    username = value;
-                    InvokePropertyChanged(new PropertyChangedEventArgs("Username"));
+                    email = value;
+                    InvokePropertyChanged(new PropertyChangedEventArgs("Email"));
                 }
             }
 
@@ -283,10 +286,10 @@ namespace BluetoothScouterPits
                 }
             }
 
-            public DataTable AverageHeaders { get; set; }
-            public DataTable SumHeaders { get; set; }
-            public DataTable MinimumHeaders { get; set; }
-            public DataTable MaximumHeaders { get; set; }
+            public DataTable AverageColumns { get; set; }
+            public DataTable SumColumns { get; set; }
+            public DataTable MinimumColumns { get; set; }
+            public DataTable MaximumColumns { get; set; }
             public event PropertyChangedEventHandler PropertyChanged;
 
             private void InvokePropertyChanged(PropertyChangedEventArgs e)
@@ -297,15 +300,15 @@ namespace BluetoothScouterPits
 
         #region Public SettingsForm Accessors
 
-        public string Username => SettingsValuesInstance.Username;
+        public string Email => SettingsValuesInstance.Email;
         public string Password => SettingsValuesInstance.Password;
         public string ApiKey => SettingsValuesInstance.ApiKey;
         public string EventName => SettingsValuesInstance.EventName;
         public string DatabaseUrl => SettingsValuesInstance.DatabaseUrl;
-        public DataTable AverageHeaders => SettingsValuesInstance.AverageHeaders;
-        public DataTable SumHeaders => SettingsValuesInstance.SumHeaders;
-        public DataTable MinimumHeaders => SettingsValuesInstance.MinimumHeaders;
-        public DataTable MaximumHeaders => SettingsValuesInstance.MaximumHeaders;
+        public DataTable AverageColumns => SettingsValuesInstance.AverageColumns;
+        public DataTable SumColumns => SettingsValuesInstance.SumColumns;
+        public DataTable MinimumColumns => SettingsValuesInstance.MinimumColumns;
+        public DataTable MaximumColumns => SettingsValuesInstance.MaximumColumns;
 
         #endregion
     }

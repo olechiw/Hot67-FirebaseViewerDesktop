@@ -1,8 +1,8 @@
-﻿namespace BluetoothScouterPits
+﻿namespace BluetoothScouterPits.Interfaces
 {
     public interface IFirebaseSettingsObject
     {
-        string Username { get; }
+        string Email { get; }
         string Password { get; }
         string ApiKey { get; }
         string EventName { get; }
