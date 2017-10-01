@@ -45,9 +45,9 @@ namespace PitScouterTest
             var pTable = GetType().GetProperty(DataTablePropertyName);
 
 
-            Assert.IsFalse(SettingsForm.IsString(pInt));
-            Assert.IsTrue(SettingsForm.IsString(pString));
-            Assert.IsFalse(SettingsForm.IsString(pTable));
+            Assert.IsFalse(SettingsForm.IsString(pInt), "Thought Integer was String");
+            Assert.IsTrue(SettingsForm.IsString(pString), "Didn't think String was String");
+            Assert.IsFalse(SettingsForm.IsString(pTable), "Thought Table was String");
         }
 
         [TestMethod]
@@ -57,9 +57,9 @@ namespace PitScouterTest
             var pString = GetType().GetProperty(StringPropertyName);
             var pTable = GetType().GetProperty(DataTablePropertyName);
 
-            Assert.IsFalse(SettingsForm.IsDataTable(pInt));
-            Assert.IsFalse(SettingsForm.IsDataTable(pString));
-            Assert.IsTrue(SettingsForm.IsDataTable(pTable));
+            Assert.IsFalse(SettingsForm.IsDataTable(pInt), "Thought Integer was Table");
+            Assert.IsFalse(SettingsForm.IsDataTable(pString), "Thought String was Table");
+            Assert.IsTrue(SettingsForm.IsDataTable(pTable), "Didn't think Table was Table");
         }
 
         [TestMethod]
@@ -72,7 +72,7 @@ namespace PitScouterTest
 
             var resultConfig = result.Aggregate((s, s1) => s + s1);
             // Assure were read properly
-            Assert.AreEqual(testConfig, resultConfig);
+            Assert.AreEqual(testConfig, resultConfig, "Configuration Lost in Translation");
         }
 
         [TestMethod]
@@ -97,7 +97,7 @@ namespace PitScouterTest
 
             // Assure were written properly
             Assert.AreEqual(testConfigValues.Aggregate((s, s1) => s + s1),
-                resultConfig.Aggregate((s, s1) => s + s1));
+                resultConfig.Aggregate((s, s1) => s + s1), "Configuration Lost in Translation");
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BluetoothScouterPits;
+using BluetoothScouterPits.Forms;
 using BluetoothScouterPits.Interfaces;
 using BluetoothScouterPits.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -15,20 +16,44 @@ namespace PitScouterTest
     public class MainTest
     {
         [TestMethod]
-        public void TestGetCalculatedDataTable()
+        public async Task TestGetCalculatedDataTable()
         {
-            var testForm = new MainForm(new TestDataSettings());
-            try
-            {
-                var dataTable = testForm.GetCalculatedDataTable();
-                
-                
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            var testSettings = new TestDataSettings();
+            var testForm = new MainForm(testSettings, testSettings);
+            
+            var dataTable = await testForm.GetCalculatedDataTable();
+
+            // 1 team, one row
+            Assert.AreEqual(dataTable.Rows.Count, 1, "More/Less Than One Row Found!");
+
+            #region Column Names Testing
+
+            // Not really neccesary atm.
+
+            #endregion
+
+            #region Calculated Columns Testing
+
+            // First test 
+            var resultantRow = dataTable.Rows[0];
+
+            Assert.AreEqual( // Average
+                resultantRow[MainForm.Average + TestDataSettings.TestValueKey],
+                "2", "Average Inaccurate!");
+
+            Assert.AreEqual( // Sum
+                resultantRow[MainForm.Sum + TestDataSettings.TestValueKey],
+                "6", "Sum Inaccurate!");
+
+            Assert.AreEqual( // Minimum
+                resultantRow[MainForm.Minimum + TestDataSettings.TestValueKey],
+                "1", "Minimum Inaccurate!");
+
+            Assert.AreEqual( // Maximum
+                resultantRow[MainForm.Maximum + TestDataSettings.TestValueKey],
+                "3", "Maximum Inaccurate");
+
+            #endregion
         }
 
         /* This is a test data source, 
@@ -37,16 +62,38 @@ namespace PitScouterTest
          * 3 Matches, "1", "2", and "3"
          * 1 subvalue, "Value1"
          * The results should be:
-         * "Average of Value1" : "3"
+         * "Average of Value1" : "2"
          *  "Sum of Value1" : "6"
          *  "Minimum of Value1" : "1"
          *  "Maximum of Value1" : "3"
+         *  
+         *  
+         *  --------
+         *  11
+         *  {
+         *      "Team Number" : "1",
+         *      "Match Number" : "1",
+         *      "Value1" : "2"
+         *  }
+         *  21
+         *  {
+         *      "Team Number" : "1",
+         *      "Match Number" : "2",
+         *      "Value1" : "1"
+         *  }
+         *  31
+         *  {
+         *      "Team Number" : "1",
+         *      "Match Number" : "3",
+         *      "Value1" : "3"
+         *  }
+         *  --------
          */
 
         public class TestDataSettings : SettingsForm, IDataSourceObject
         {
             private const string TestConfigurationFile = "testconfig.cfg";
-            private const string TestValueKey = "Value1";
+            public const string TestValueKey = "Value1";
 
             public TestDataSettings() :
                 base(TestConfigurationFile) // Allow it to not be "testing", on purpose, because that way it will setup the columns
@@ -100,7 +147,7 @@ namespace PitScouterTest
                 {
                     new MatchObject(subMatch1),
                     new MatchObject(subMatch2),
-                    new MatchObject(subMatch3),
+                    new MatchObject(subMatch3)
                 }.ToList();
             }
 
@@ -113,6 +160,11 @@ namespace PitScouterTest
             public void SetSettings(IFirebaseSettingsObject firebaseSettings)
             {
                 throw new NotImplementedException("Method should never have been called!");
+            }
+
+            public void RefreshCredentials()
+            {
+                // Do nothing, this is a mock datasource with no credentials
             }
         }
     }

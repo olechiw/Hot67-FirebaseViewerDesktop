@@ -1,4 +1,4 @@
-﻿namespace BluetoothScouterPits
+﻿namespace BluetoothScouterPits.Forms
 {
     partial class MainForm
     {

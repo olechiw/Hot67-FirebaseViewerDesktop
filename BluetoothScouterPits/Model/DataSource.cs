@@ -35,15 +35,23 @@ namespace BluetoothScouterPits.Model
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
+                return new List<MatchObject>(); // Error looks like no results
             }
         }
 
         public async Task<List<MatchObject>> Get(string name)
         {
-            var result = await database.Child(name).OnceAsync<JObject>();
+            try
+            {
+                var result = await database.Child(name).OnceAsync<JObject>();
 
-            return result.Select(r => new MatchObject(r.Object)).ToList();
+                return result.Select(r => new MatchObject(r.Object)).ToList();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new List<MatchObject>(); // Error looks like no results
+            }
         }
 
         public void RefreshCredentials()

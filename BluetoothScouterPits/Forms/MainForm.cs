@@ -6,32 +6,33 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using BluetoothScouterPits.Interfaces;
 using BluetoothScouterPits.Model;
 
-namespace BluetoothScouterPits
+namespace BluetoothScouterPits.Forms
 {
     public partial class MainForm : Form
     {
         private const int TeamNumberColumn = 0;
 
         // Have to be the same as in the scouting application!
-        private const string TeamNumber = "Team Number";
+        public const string TeamNumber = "Team Number";
 
-        private const string MatchNumber = "Match Number";
-        private const string Average = "Average of: ";
-        private const string Sum = "Sum of: ";
-        private const string Minimum = "Minimum of: ";
-        private const string Maximum = "Maximum of: ";
+        public const string MatchNumber = "Match Number";
+        public const string Average = "Average of: ";
+        public const string Sum = "Sum of: ";
+        public const string Minimum = "Minimum of: ";
+        public const string Maximum = "Maximum of: ";
 
 
-        private readonly DataSource database;
+        private readonly IDataSourceObject database;
         private readonly SettingsForm settingsForm;
 
         private List<MatchObject> matches;
 
         private bool synchronizedViews;
 
-        public MainForm(SettingsForm form = null)
+        public MainForm(SettingsForm form = null, IDataSourceObject dataSource = null)
         {
             settingsForm = form ?? new SettingsForm();
 
@@ -39,7 +40,7 @@ namespace BluetoothScouterPits
 
             SetWatermark(searchBox, "Search By Team");
 
-            database = new DataSource(settingsForm);
+            database = dataSource ?? new DataSource(settingsForm);
 
             Sync();
         }
